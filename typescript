@@ -1,0 +1,329 @@
+Script started on Fri 13 Feb 2015 11:21:17 PM EST
+]0;finnegan_nd@cobra:~/csc245/Progs/Prog1[?1034h[finnegan_nd@cobra Prog1]$ cat ediot[K[Ktor.cpp
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <cstdlib>
+using namespace std;
+
+#include "linelist.h"
+
+void OpenFile (ifstream& infile, int argc, char *argv[]);
+void BuildList (ifstream& infile, LineList& L);
+void StartUp(int argc, char *argv[], LineList& L);
+void FinishUp (char *argv[], LineList& L);
+void GetCommand (LineList& L, char& command);
+void Insert (LineList& L);
+
+int main(int argc, char *argv[])
+{
+	LineList L;	char command;
+
+	StartUp (argc, argv, L);
+
+	do
+	{
+		GetCommand (L, command);
+
+		switch(command)
+		{
+			case 'L' :
+			 L.printList();  break;
+			case 'I' :
+			 Insert(L);	break;
+			case 'D' :
+			 L.deleteLine(); break;
+			case 'N' :
+			 L.moveNextLine(); break;
+			case 'P' :
+			 L.movePrevLine(); break; 
+			case 'A' :
+			 cout << (L.getCurrLineNum()) << endl;
+		}
+			
+	} while (command != 'E');
+
+	FinishUp (argv, L);
+	return 0;
+}
+
+void Insert (LineList& L)
+{
+	int lineNum = L.getCurrLineNum()+1;
+	string buffer;
+	
+	if (L.getCurrLineNum() > L.getLength())
+		lineNum--;
+
+	cout << lineNum << "> ";
+	getline (cin, buffer);
+	L.insertLine(buffer);
+}
+	
+void GetCommand (LineList& L, char& command)
+{
+	cout << L.getCurrLineNum() << "> ";
+	cin >> command;	
+
+	cin.ignore (80, '\n');
+}
+	
+void StartUp(int argc, char *argv[], LineList& L)
+{
+	ifstream infile;
+
+        OpenFile (infile, argc, argv);
+        BuildList (infile, L);
+        L.printList();
+	L.goToBottom();
+}
+
+void FinishUp (char *argv[], LineList& L)
+{
+	ofstream outfile;
+	string filename = argv[1];
+
+	outfile.open(filename.c_str());
+	L.goToTop();
+
+	for (int i = 1;  i <= L.getLength();  i++)
+	{
+		outfile << L.getCurrLine() << endl;
+		L.moveNextLine();
+	}
+	outfile.close();
+}
+
+void OpenFile (ifstream& infile, int argc, char *argv[])
+{
+	if (argc == 1)
+	{
+		cout << "Error -- No Filename Entered!" << endl;
+		exit(1);
+	}
+
+	string filename = argv[1];
+	infile.open(filename.c_str());
+} 
+	
+void BuildList (ifstream& infile, LineList& L)
+{
+	if (infile)
+	{
+		string buffer;
+
+		getline (infile, buffer);
+		while (infile)
+		{
+			L.insertLine(buffer);
+			getline (infile, buffer);
+		}
+		infile.close();
+	}
+}
+]0;finnegan_nd@cobra:~/csc245/Progs/Prog1[finnegan_nd@cobra Prog1]$ cat lin[Knelist.cpp
+
+#include "linelist.h"
+
+LineList::LineList()
+{
+	LineNode *line = new LineNode;
+	LineNode *line2 = new LineNode;
+
+	line -> info = topMessage;
+	currLine = line;
+	currLineNum = 1;
+	length = 0;
+	line2 -> info = bottomMessage;
+	currLine -> back = NULL;
+	currLine -> next = line2;
+	line2 -> back = line;
+	line2 -> next = NULL;
+}
+
+void LineList::goToTop() 
+{
+	// Post : Advances currLine to line 1
+	//Checks to see if it's at the top already or if the spot is null.
+	if ((currLine -> info == topMessage) || (currLine -> back == NULL))
+	{}
+	//Continues calling movePrevLine() until it reaches the spot before the top.
+	else
+	{
+		while (currLine -> back -> info != topMessage)
+			movePrevLine();
+	}
+}
+
+void LineList::goToBottom() 
+{
+	// Post : Advances currLine to last line
+	//Checks to see if it's at the bottom already or if the spot is null.
+	if ((currLine -> info == bottomMessage) || (currLine -> next == NULL))
+	{}
+	//Continues calling moveNextLine() until it reaches the spot before the bottom.
+	else
+	{
+		while (currLine -> next -> info != bottomMessage)
+		{
+			moveNextLine();
+		}
+	}
+}
+
+void LineList::insertLine(string newLine)
+{
+	// post : newLine has been inserted after the current line
+
+	LineNode *line = new LineNode;
+	
+	line -> info = newLine;
+	line -> back = currLine;
+	line -> next = currLine -> next;
+	currLine -> next -> back = currLine;
+	currLine -> next = line;
+	currLine = currLine -> next;
+	length++;
+	if (length != 1)
+		currLineNum++;
+}
+
+void LineList::deleteLine()
+{
+	// post : deletes the current line leaving currentLine
+	//	  pointing to line following
+
+	//If it's not at the top, the bottom, or at a null spot, then delete the line.
+	if ((currLine -> info != topMessage) && (currLine -> info != bottomMessage) && (currLine != NULL))
+	{
+		currLine -> back -> next = currLine -> next;
+		currLine -> next -> back = currLine -> back;
+		delete currLine;
+		currLine = currLine -> back;
+		if (currLineNum > 1)
+			currLineNum--;
+		length--;		
+	}
+	else
+		cout << "NOTHING TO DELETE" << endl;
+}
+
+void LineList::printList() 
+{
+	int lineNum = 1;
+
+	LineNode *mark = currLine;
+	int markNum = currLineNum;
+
+	goToTop();
+
+	//List is not empty, so print text lines out.
+	if (length > 0)
+	{
+		LineNode *line = currLine;
+
+		while (line -> info != bottomMessage)
+		{
+			cout << lineNum << "> " << line -> info << endl;
+			line = line -> next;
+			lineNum++;
+		}
+	}
+
+	currLine = mark;
+	currLineNum = markNum;
+}
+
+string LineList::getCurrLine() const
+{
+	return (currLine -> info);
+}
+
+void LineList::moveNextLine()
+{
+	// Post : Advances currLine (unless already at last line)
+	if ((currLine -> next -> info != bottomMessage) && (currLine -> next != NULL))
+	{
+		currLine = currLine -> next;
+		currLineNum++;
+	}
+}
+
+void LineList::movePrevLine()
+{
+	// Post : Advances currLine (unless already at last line)
+	if ((currLine -> back -> info != topMessage) && (currLine -> back != NULL) && (currLine != NULL))
+	{
+		currLine = currLine -> back;
+		currLineNum--;
+	}
+}
+
+int LineList::getCurrLineNum() const
+{
+	return currLineNum;
+}
+
+int LineList::getLength() const
+{
+	return length;
+}
+]0;finnegan_nd@cobra:~/csc245/Progs/Prog1[finnegan_nd@cobra Prog1]$ c++ editor.cpp linlest[K[K[K[Kelist.o
+]0;finnegan_nd@cobra:~/csc245/Progs/Prog1[finnegan_nd@cobra Prog1]$ c++ editor.cpp linelist.o[9Pat linelist.cpp[2Peditor.cppexit[K./a.out testfile
+1> This is my first line.
+2> This is my second line.
+3> This is the third line.
+4> Carpe Diem! :-)
+5> Where did the lines go?
+6> Oh well, here are some more.
+7> GO MERCER!
+7> N
+7> N
+7> P
+6> P
+5> P
+4> I
+5> Seize the day!
+5> L
+1> This is my first line.
+2> This is my second line.
+3> This is the third line.
+4> Carpe Diem! :-)
+5> Seize the day!
+6> Where did the lines go?
+7> Oh well, here are some more.
+8> GO MERCER!
+5> N
+6> D
+5> L
+1> This is my first line.
+2> This is my second line.
+3> This is the third line.
+4> Carpe Diem! :-)
+5> Oh well, here are some more.
+6> GO MERCER!
+5> D
+4> L
+1> This is my first line.
+2> This is my second line.
+3> This is the third line.
+4> Oh well, here are some more.
+5> GO MERCER!
+4> I
+5> Carpe Diem! :-)
+5> L
+1> This is my first line.
+2> This is my second line.
+3> This is the third line.
+4> Carpe Diem! :-)
+5> Oh well, here are some more.
+6> GO MERCER!
+5> N
+6> N
+7> N
+7> N
+7> E
+]0;finnegan_nd@cobra:~/csc245/Progs/Prog1[finnegan_nd@cobra Prog1]$ exit
+exit
+
+Script done on Fri 13 Feb 2015 11:24:59 PM EST
