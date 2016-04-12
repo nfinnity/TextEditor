@@ -1,2 +1,27 @@
 # TextEditor
-The purpose of this program is to create a simple text editor. The operations it can perform is inserting, listing, deleting, exiting, and moving to the previous and successive lines.
+
+The purpose of this program is to create and simulate a simple text editor. The editor will take a file as a command line argument and use it as input for initial text lines contained in the program. The editor will perform simple tasks, including: inserting, listing, deleting, exiting, and moving to the previous and successive lines. There will be specification, implementation, and client files in order to create it. The output for this file (once the program is exited from) is the saved file of the current lines in the editor to the file that was inputted. 
+
+OOP Design
+
+The classes being used by this program is the LineList ADT that will created and implemented into the program. This class will keep track of the current pointer, top and bottom headers, and will manipulate and alter the pointer and its contents to perform the different commands. The functions included in this ADT are:
+
+    -goToTop(): Changes the current pointer to point to the first line of text
+    -goToBottom(): Changes the current pointer to point to the last line of text 
+    -insertLine(): Inserts a new line of text, and then changes the current pointer to the recently added line
+    -deleteLine(): Deletes the current line and sets the new current line to the previous line
+    -printList(): Print out all the lines currently in the text editor
+    -moveNextLine(): Moves the current pointer to the next line
+    -movePrevLine(): Moves the current pointer to the previous line
+    -getCurrLineNum(): Displays the current line number
+    -getLength(): Returns an integer that represents the current number of lines of text in the editor
+    -getCurrLine(): Returns the string that the current pointer is pointing to
+
+The current line pointer will be a private variable, as outside classes do not need access to this variable.
+
+ALGORITHM:
+  1. Read in file name from command line. (exit if the file name is invalid or nonexistent)
+  2. Open file and import existing lines into the program.
+  3. Begin accepting a command from the user.
+  4. Perform the command, and then repeat step 3 until the exit command is reached.
+  5. Save the file upon exiting. 
